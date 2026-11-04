@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>For You ❤️</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    min-height: 100vh;
+    overflow: hidden;
+    font-family: Georgia, serif;
+    color: white;
+    background:
+        radial-gradient(ellipse at 50% 45%, #593047 0%, #291625 48%, #100b14 100%);
+}
+
+.container {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    position: relative;
+    z-index: 2;
+    padding: 20px;
+}
+
+.subtitle {
+    color: #e9b7c9;
+    font-size: 12px;
+    letter-spacing: 5px;
+    margin-bottom: 5px;
+    opacity: 0;
+    animation: fadeIn 2s forwards 0.5s;
+}
+
+.ring-area {
+    width: min(100%, 450px);
+    height: 330px;
+    position: relative;
+}
+
+#ringCanvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+h1 {
+    color: #ffe2ed;
+    font-size: clamp(25px, 6vw, 35px);
+    margin: 0 0 15px;
+    opacity: 0;
+    transition: opacity 1.5s;
+    text-shadow: 0 0 20px #f2b4d0;
+}
+
+.description {
+    color: #d9b8c9;
+    font-size: 15px;
+    margin-bottom: 30px;
+    opacity: 0;
+    transition: opacity 1.5s;
+}
+
+.buttons {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 18px;
+    opacity: 0;
+    transition: opacity 1.5s;
+}
+
+button {
+    min-width: 115px;
+    padding: 14px 28px;
+    border-radius: 40px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: 0.3s;
+    font-family: Georgia, serif;
+}
+
+button:hover {
+    transform: translateY(-5px) scale(1.06);
+}
+
+#yes {
+    color: #421b2d;
+    background: linear-gradient(135deg, #ffe3ed, #e99ab9);
+    border: none;
+    font-weight: bold;
+    box-shadow: 0 0 25px #ec9dbd66;
+}
+
+#no {
+    color: #ffe2ed;
+    background: transparent;
+    border: 1px solid #e7b7ca;
+}
+
+#result {
+    display: none;
+    margin-top: 30px;
+    color: #ffe1ed;
+    font-size: 23px;
+    line-height: 1.8;
+    animation: fadeIn 1.5s forwards;
+    text-shadow: 0 0 15px #f3a9c5;
+}
+
+.heart {
+    position: fixed;
+    bottom: -40px;
+    color: #ed9fbd;
+    pointer-events: none;
+    animation: floatUp linear forwards;
+    z-index: 1;
+}
+
+.sparkle {
+    position: fixed;
+    color: #ffe4b0;
+    pointer-events: none;
+    animation: twinkle 2s infinite alternate;
+}
+
+@keyframes fadeIn {
+    to { opacity: 1; }
+}
+
+@keyframes floatUp {
+    0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 0;
+    }
+    15% { opacity: 0.8; }
+    100% {
+        transform: translateY(-110vh) rotate(360deg);
+        opacity: 0;
+    }
+}
+
+@keyframes twinkle {
+    from { opacity: 0.15; transform: scale(0.7); }
+    to { opacity: 1; transform: scale(1.3); }
+}
+
+@media(max-width: 400px) {
+    .ring-area {
+        height: 280px;
+    }
+
+    .container {
+        padding: 12px;
+    }
+
+    button {
+        min-width: 105px;
+        padding: 13px 23px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="subtitle">
+        A SPECIAL MOMENT FOR YOU
+    </div>
+
+    <div class="ring-area">
+        <canvas id="ringCanvas"></canvas>
+    </div>
+
+    <h1 id="question">Will you marry me? ❤️</h1>
+
+    <p class="description" id="description">
+        I have a little question for you...
+    </p>
+
+    <div class="buttons" id="buttons">
+        <button id="yes">YES ❤️</button>
+        <button id="no">NO 💔</button>
+    </div>
+
+    <div id="result"></div>
+
+</div>
+
+<script type="module">
+
+import * as THREE from
+'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
+
+// =================================
+// 1. SCENE
+// =================================
+
+const canvas = document.getElementById("ringCanvas");
+
+const scene = new THREE.Scene();
+
+const camera = new THREE.PerspectiveCamera(
+    38,
+    1,
+    0.1,
+    100
+);
+
+camera.position.set(0, 0, 6);
+
+const renderer = new THREE.WebGLRenderer({
+    canvas: canvas,
+    alpha: true,
+    antialias: true
+});
+
+renderer.setPixelRatio(
+    Math.min(window.devicePixelRatio, 2)
+);
+
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.4;
+
+// =================================
+// 2. LIGHTS
+// =================================
+
+scene.add(
+    new THREE.AmbientLight(0xffffff, 1.5)
+);
+
+const goldLight = new THREE.PointLight(
+    0xffc76c, 150, 15
+);
+goldLight.position.set(-3, 3, 4);
+scene.add(goldLight);
+
+const whiteLight = new THREE.PointLight(
+    0xffffff, 120, 15
+);
+whiteLight.position.set(3, 2, 3);
+scene.add(whiteLight);
+
+const backLight = new THREE.PointLight(
+    0xff8ab7, 100, 15
+);
+backLight.position.set(0, -2, -3);
+scene.add(backLight);
+
+// =================================
+// 3. RING
+// =================================
+
+const ring = new THREE.Group();
+scene.add(ring);
+
+// Gold material
+
+const gold = new THREE.MeshStandardMaterial({
+    color: 0xd9a63e,
+    metalness: 0.85,
+    roughness: 0.19
+});
+
+// Main ring band
+
+const band = new THREE.Mesh(
+    new THREE.TorusGeometry(0.85, 0.105, 32, 160),
+    gold
+);
+
+ring.add(band);
+
+// Inner golden detail
+
+const innerBand = new THREE.Mesh(
+    new THREE.TorusGeometry(0.85, 0.025, 16, 120),
+    new THREE.MeshStandardMaterial({
+        color: 0xffe1a0,
+        metalness: 0.9,
+        roughness: 0.2
+    })
+);
+
+innerBand.position.z = -0.08;
+ring.add(innerBand);
+
+// Diamond material
+
+const diamondMaterial = new THREE.MeshPhysicalMaterial({
+    color: 0xe8f7ff,
+    metalness: 0.05,
+    roughness: 0.025,
+    transmission: 0.15,
+    thickness: 1.5,
+    ior: 2.4,
+    clearcoat: 1,
+    clearcoatRoughness: 0
+});
+
+// Main diamond
+
+const diamond = new THREE.Mesh(
+    new THREE.OctahedronGeometry(0.31, 1),
+    diamondMaterial
+);
+
+diamond.position.set(0, 1.02, 0.05);
+diamond.scale.set(1, 1.2, 0.85);
+ring.add(diamond);
+
+// Diamond base
+
+const base = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.16, 0.24, 0.12, 32),
+    gold
+);
+
+base.position.set(0, 0.84, 0);
+ring.add(base);
+
+// Four gold claws
+
+for (let i = 0; i < 4; i++) {
+
+    const angle = i * Math.PI / 2;
+
+    const claw = new THREE.Mesh(
+        new THREE.SphereGeometry(0.045, 20, 20),
+        gold
+    );
+
+    claw.position.set(
+        Math.cos(angle) * 0.18,
+        1.08,
+        Math.sin(angle) * 0.18
+    );
+
+    ring.add(claw);
+}
+
+// Small side details
+
+for (let i = 0; i < 2; i++) {
+
+    const smallDiamond = new THREE.Mesh(
+        new THREE.OctahedronGeometry(0.09, 1),
+        diamondMaterial
+    );
+
+    smallDiamond.position.set(
+        i === 0 ? -0.47 : 0.47,
+        0.69,
+        0.04
+    );
+
+    ring.add(smallDiamond);
+}
+
+// =================================
+// 4. ANIMATION
+// =================================
+
+// Start below the screen
+
+ring.position.set(0, -3.7, 0);
+ring.scale.setScalar(0.7);
+
+ring.rotation.x = 0.35;
+ring.rotation.y = -0.5;
+
+// Resize renderer
+
+function resize() {
+
+    const width = canvas.clientWidth;
+    const height = canvas.clientHeight;
+
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+
+    renderer.setSize(width, height, false);
+}
+
+resize();
+
+window.addEventListener("resize", resize);
+
+let startTime = null;
+let animationFinished = false;
+
+function animate(time) {
+
+    requestAnimationFrame(animate);
+
+    if (startTime === null) {
+        startTime = time;
+    }
+
+    const elapsed = (time - startTime) / 1000;
+
+    // Ring rises smoothly
+
+    const progress = Math.min(elapsed / 3.5, 1);
+
+    const ease = 1 - Math.pow(1 - progress, 4);
+
+    ring.position.y = -3.7 + (3.55 * ease);
+
+    const scale = 0.7 + (0.3 * ease);
+
+    ring.scale.setScalar(scale);
+
+    // Gentle rotation
+
+    ring.rotation.y = -0.5 + elapsed * 0.4;
+
+    ring.rotation.x =
+        0.35 + Math.sin(elapsed * 0.8) * 0.08;
+
+    // Diamond sparkle
+
+    diamond.rotation.y = Math.sin(elapsed * 1.5) * 0.12;
+
+    renderer.render(scene, camera);
+
+    // Show question after ring arrives
+
+    if (progress >= 1 && !animationFinished) {
+
+        animationFinished = true;
+
+        setTimeout(() => {
+
+            document.getElementById("question").style.opacity = 1;
+
+            document.getElementById("description").style.opacity = 1;
+
+            document.getElementById("buttons").style.opacity = 1;
+
+        }, 500);
+    }
+}
+
+requestAnimationFrame(animate);
+
+// =================================
+// 5. FLOATING HEARTS
+// =================================
+
+function createHeart() {
+
+    const heart = document.createElement("div");
+
+    heart.className = "heart";
+    heart.innerHTML = "♥";
+
+    heart.style.left = Math.random() * 100 + "vw";
+
+    heart.style.fontSize =
+        (12 + Math.random() * 20) + "px";
+
+    heart.style.animationDuration =
+        (6 + Math.random() * 5) + "s";
+
+    document.body.appendChild(heart);
+
+    setTimeout(() => heart.remove(), 12000);
+}
+
+setInterval(createHeart, 650);
+
+// =================================
+// 6. YES BUTTON
+// =================================
+
+const yesButton = document.getElementById("yes");
+const noButton = document.getElementById("no");
+
+function showResult(message) {
+
+    document.getElementById("buttons").style.display = "none";
+
+    document.getElementById("description").style.display = "none";
+
+    const result = document.getElementById("result");
+
+    result.innerHTML = message;
+    result.style.display = "block";
+
+}
+
+yesButton.addEventListener("click", () => {
+
+    showResult(
+        "Inchallah one day... 💍❤️<br><br>" +
+        "Ghir sbri m3aya 🥹"
+    );
+
+    for (let i = 0; i < 20; i++) {
+
+        setTimeout(createHeart, i * 100);
+
+    }
+
+});
+
+// =================================
+// 7. NO BUTTON
+// =================================
+
+noButton.addEventListener("click", () => {
+
+    showResult(
+        "Machi mochkil ❤️<br><br>" +
+        "It's okay "
+    );
+
+});
+
+</script>
+
+</body>
+</html>
